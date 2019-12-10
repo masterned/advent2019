@@ -50,6 +50,11 @@
             }
         ],
         "no-eval": "error",
-        "no-implied-eval": "error"
+        "no-implied-eval": "error",
+        "no-trailing-spaces": "error",
+        "eol-last": [
+            "error",
+            "always"
+        ]
     }
 }
