@@ -9,5 +9,8 @@ import {
 readFile('./res/day3/wires_input.txt', { encoding: 'ascii', flag: 'r' }, (err, data) => {
   if (err) throw err
 
-  console.log('closest intersection to root:', closestIntersection(data))
+  const closest = closestIntersection(data)
+
+  // should be 731
+  console.log(`closest intersection to root: ${closest}`)
 })

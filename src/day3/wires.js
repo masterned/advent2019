@@ -1,7 +1,12 @@
 import {
   compose,
   map,
-  tail
+  tail,
+  reduce,
+  append,
+  head,
+  last,
+  add
 } from 'ramda'
 
 import {
@@ -10,87 +15,115 @@ import {
   toNum
 } from '../utils/utils'
 
-export const parseWires = str => compose(map(split(',')), split('\n'), trim)(str)
+export const Point = (x, y) => ({
+  x,
+  y
+})
 
-export const toVector = (origin, velocity) => {
-  const direction = velocity.charAt(0)
-  const distance = compose(toNum, tail)(velocity)
+export const manhattan = a => b =>
+  reduce(
+    add,
+    0,
+    map(Math.abs)([a.x - b.x, a.y - b.y])
+  )
 
-  const to = [...origin]
-  switch (direction) {
-    case 'U':
-      to[1] += distance
-      break
-    case 'D':
-      to[1] -= distance
-      break
-    case 'L':
-      to[0] -= distance
-      break
-    case 'R':
-      to[0] += distance
-      break
+export const parseMagStrArray = str =>
+  compose(
+    map(split(',')),
+    split('\n'),
+    trim
+  )(str)
+
+export const charToAngle = char =>
+  char === 'U'
+    ? Point(0, 1)
+    : char === 'D'
+      ? Point(0, -1)
+      : char === 'L'
+        ? Point(-1, 0)
+        : char === 'R'
+        && Point(1, 0)
+
+export const toVector = (magnitude, origin = { x: 0, y: 0 }) => ({
+  ...origin,
+  a: charToAngle(head(magnitude)),
+  d: toNum(tail(magnitude))
+})
+
+export const calcDest = v => ({
+  x: v.x + (v.a.x * v.d),
+  y: v.y + (v.a.y * v.d)
+})
+
+export const chainVectors = magStrArr => {
+  if (magStrArr.length === 0) return []
+  if (magStrArr.length === 1) return [toVector(head(magStrArr))]
+
+  const prev = chainVectors(magStrArr.slice(0, -1))
+  return append(toVector(last(magStrArr), calcDest(last(prev))), prev)
+}
+
+export const point_lineCollide = line => point => {
+  if (line.x === point.x) {
+    if (
+      ((line.y <= point.y) && (point.y <= calcDest(line).y)) ||
+      ((line.y >= point.y) && (point.y >= calcDest(line).y))
+    ) return true
+    return false
   }
-  return [origin, to]
+  if (line.y === point.y) {
+    if (
+      ((line.x <= point.x) && (point.x <= calcDest(line).x)) ||
+      ((line.x >= point.x) && (point.x >= calcDest(line).x))
+    ) return true
+    return false
+  }
+  return false
 }
 
 export const collide = v0 => v1 => {
-  const [[ox0, oy0], [dx0, dy0]] = v0
-  const [[ox1, oy1], [dx1, dy1]] = v1
-  const xs = []
-  const ys = []
-  for (let x = Math.min(ox0, dx0); x <= Math.max(ox0, dx0); ++x) xs.push(x)
-  for (let y = Math.min(oy0, dy0); y <= Math.max(oy0, dy0); ++y) ys.push(y)
-
-  let out_x
-  for (let x = Math.min(ox1, dx1); x <= Math.max(ox1, dx1); ++x) {
-    if (xs.includes(x)) {
-      out_x = x
-      break
-    }
-  }
-
-  let out_y
-  for (let y = Math.min(oy1, dy1); y <= Math.max(oy1, dy1); ++y) {
-    if (ys.includes(y)) {
-      out_y = y
-      break
-    }
-  }
-  return (out_x && out_y) && [out_x, out_y]
+  const hori = v0.a.x ? v0 : v1
+  const vert = v0.a.y ? v0 : v1
+  const cross = Point(vert.x, hori.y)
+  return (
+    point_lineCollide(vert)(cross)
+    && point_lineCollide(hori)(cross)
+  ) && cross
 }
 
-export const attachWire = wire => {
-  const segments = []
-  let cur = [0, 0]
-  for (const seg of wire) {
-    const next = toVector(cur, seg)
-    segments.push(next)
-    cur = next[1]
-  }
-  return segments
-}
-
-export const getCollisions = (w0, w1) => {
-  const collisions = []
-  for (const seg1 of w1) {
-    for (const seg0 of w0) {
-      const potential = collide(seg0)(seg1)
-      if (potential) collisions.push(potential)
-    }
-  }
-  return collisions
-}
-
-export const manhattan = origin => point => (Math.abs(point[0]) - origin[0]) + (Math.abs(point[1]) - origin[1])
+export const getCollisions = (w0, w1) =>
+  reduce(
+    (cols0, seg0) =>
+      append(
+        reduce(
+          (cols1, seg1) => {
+            const collision = collide(seg0)(seg1)
+            return collision
+              ? append(
+                collision,
+                cols1
+              )
+              : cols1
+          },
+          [],
+          w1
+        ),
+        cols0
+      ),
+    [],
+    w0
+  ).flat()
 
 export const closestIntersection = str =>
   Math.min(
     ...compose(
-      map(manhattan([0, 0])),
+      map(manhattan(Point(0, 0))),
+      tail,
       getCollisions
-    )(...compose(
-      map(attachWire),
-      parseWires)(str)
+    )(
+      ...compose(
+        map(chainVectors),
+        parseMagStrArray
+      )(str)
     )
   )
