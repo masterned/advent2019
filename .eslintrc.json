@@ -55,6 +55,12 @@
         "eol-last": [
             "error",
             "always"
-        ]
+        ],
+        "arrow-parens": [
+            "error",
+            "as-needed"
+        ],
+        "arrow-spacing": "error",
+        "comma-spacing": "error"
     }
 }
