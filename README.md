@@ -6,7 +6,10 @@
 > I will be pushing my code each time I solve a puzzle (this may be subject to change).
 
 ## Calendar Progress
-* [x] [x] Day 1: __The Tyranny of the Rocket Equation__ (Part 1)
+| name | part 1 | part 2 |
+|:------:|:--------:|:--------:|
+| __The Tyranny of the Rocket Equation__ | [x] | [x] |
+* [x] [x] Day 1:  (Part 1)
 * [x] Day 2: __1202 Program Alarm__ (Part 1)
 * [x] Day 2: (Part 2)
 * [x] Day 3: __Crossed Wires__ (Part 1)
