@@ -3,31 +3,32 @@ import {
 } from 'fs'
 
 import {
-  compose,
-  map,
-  head
+  head,
+  compose
 } from 'ramda'
 
 import {
-  trim,
-  split,
-  toNum
+  fileOpts
 } from '../utils/utils'
 
 import {
   run,
   answerForm,
   setup,
-  findNV
+  findNV,
+  parseProgram
 } from './intcode'
 
-const splitCommas = split(',')
-
-readFile('./res/day2/gravAssist_input.txt', { encoding: 'ascii', flag: 'r' }, (err, data) => {
+readFile('./res/day2/gravAssist_input.txt', fileOpts, (err, data) => {
   if (err) throw err
 
-  const program = compose(map(toNum), splitCommas, trim)(data)
-  const compRepair = head(run(setup(program)(12, 2)))
+  const program = parseProgram(data)
+
+  const compRepair = compose(
+    head,
+    run,
+    setup(program)
+  )(12, 2)
 
   const gravAssist = answerForm(...findNV(program)(19690720))
 

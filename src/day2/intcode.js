@@ -1,6 +1,10 @@
 import {
   concat,
-  head
+  head,
+  compose,
+  map,
+  trim,
+  split
 } from 'ramda'
 
 const sum = (a, b) => a + b
@@ -68,3 +72,5 @@ export const findNV = program => result => {
   }
   return [-1, -1]
 }
+
+export const parseProgram = compose(map(Number.parseInt), split(','), trim)
