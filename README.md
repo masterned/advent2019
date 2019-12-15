@@ -11,7 +11,7 @@
 | 1 | The Tyranny of the Rocket Equation | \* | \* |
 | 2 | 1202 Program Alarm | \* | \* |
 | 3 | Crossed Wires | \* |  |
-| 4 | Secure Container |  |  |
+| 4 | Secure Container | \* | \* |
 | 5 | Sunny with a Chance of Asteroids |  |  |
 | 6 | Universal Orbit Map |  |  |
 | 7 | Amplification Circuit |  |  |
