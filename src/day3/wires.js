@@ -6,14 +6,11 @@ import {
   append,
   head,
   last,
-  add
-} from 'ramda'
-
-import {
   split,
   trim,
-  toNum
-} from '../utils/utils'
+  add,
+  sum
+} from 'ramda'
 
 export const Point = (x, y) => ({
   x,
@@ -26,13 +23,6 @@ export const manhattan = a => b =>
     0,
     map(Math.abs)([a.x - b.x, a.y - b.y])
   )
-
-export const parseMagStrArray = str =>
-  compose(
-    map(split(',')),
-    split('\n'),
-    trim
-  )(str)
 
 export const charToAngle = char =>
   char === 'U'
@@ -47,7 +37,7 @@ export const charToAngle = char =>
 export const toVector = (magnitude, origin = { x: 0, y: 0 }) => ({
   ...origin,
   a: charToAngle(head(magnitude)),
-  d: toNum(tail(magnitude))
+  d: Number.parseInt(tail(magnitude))
 })
 
 export const calcDest = v => ({
@@ -63,7 +53,15 @@ export const chainVectors = magStrArr => {
   return append(toVector(last(magStrArr), calcDest(last(prev))), prev)
 }
 
-export const point_lineCollide = line => point => {
+export const parseWires = str =>
+  compose(
+    map(chainVectors),
+    map(split(',')),
+    split('\n'),
+    trim
+  )(str)
+
+export const point_lineCollide = point => line => {
   if (line.x === point.x) {
     if (
       ((line.y <= point.y) && (point.y <= calcDest(line).y)) ||
@@ -85,9 +83,10 @@ export const collide = v0 => v1 => {
   const hori = v0.a.x ? v0 : v1
   const vert = v0.a.y ? v0 : v1
   const cross = Point(vert.x, hori.y)
+  const crossCheck = point_lineCollide(cross)
   return (
-    point_lineCollide(vert)(cross)
-    && point_lineCollide(hori)(cross)
+    crossCheck(vert)
+    && crossCheck(hori)
   ) && cross
 }
 
@@ -114,16 +113,29 @@ export const getCollisions = (w0, w1) =>
     w0
   ).flat()
 
-export const closestIntersection = str =>
+export const closestIntersection = (w0, w1) =>
   Math.min(
     ...compose(
       map(manhattan(Point(0, 0))),
       tail,
       getCollisions
-    )(
-      ...compose(
-        map(chainVectors),
-        parseMagStrArray
-      )(str)
-    )
+    )(w0, w1)
   )
+
+export const getNumSteps = point => wire => {
+  const next = head(wire)
+  if (point_lineCollide(point)(next)) {
+    return manhattan(point)({ x: next.x, y: next.y })
+  }
+  return next.d + getNumSteps(point)(tail(wire))
+}
+
+export const shortestIntersection = (wire0, wire1) => {
+  const firstFinder = compose(
+    getNumSteps,
+    head,
+    tail,
+    getCollisions
+  )(wire0, wire1)
+  return sum(map(firstFinder)([wire0, wire1]))
+}
